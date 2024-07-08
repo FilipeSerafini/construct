@@ -43,7 +43,6 @@ jobs:
 
             # - name: Push Docker image
              # run: docker push ${{ secrets.DHUB_USERNAME }}/tickets-api:latest
-
             
 
             - name: Create deployment
