@@ -17,6 +17,18 @@ jobs:
             - name: Checkout
               uses: actions/checkout@v2
 
+            - name: Docker Hub 
+              uses: docker/login-action@v2
+              with:
+                username: ${{ secrets.DHUB_USERNAME }}
+                password: ${{ secrets.DHUB_PASSWORD }}
+
+            - name: Build Docker image
+              run: docker build . -t ${{ secrets.DHUB_USERNAME }}/tickets-api:latest
+
+            - name: Push Docker image
+              run: docker push ${{ secrets.DHUB_USERNAME }}/tickets-api:latest
+
             - name: Upload to S3
               run: |
                 mkdir deployment
