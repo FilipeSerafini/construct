@@ -6,6 +6,10 @@ jobs:
         name: Deploy to AWS
         runs-on: ubuntu-latest
         steps:
+
+            - name: Checkout
+              uses: actions/checkout@v2
+              
             - name: Configure AWS credentials
               uses: aws-actions/configure-aws-credentials@v1
               with:
@@ -14,27 +18,33 @@ jobs:
                   aws-session-token: ${{ secrets.SESSION_TOKEN }}
                   aws-region: us-east-1
 
-            - name: Checkout
-              uses: actions/checkout@v2
-
-            - name: Docker Hub 
-              uses: docker/login-action@v2
+            - name: Setup Terraform
+              uses: hashicorp/setup-terraform@v2
               with:
-                username: ${{ secrets.DHUB_USERNAME }}
-                password: ${{ secrets.DHUB_PASSWORD }}
+                terraform_wrapper: false
 
-            - name: Build Docker image
-              run: docker build . -t ${{ secrets.DHUB_USERNAME }}/tickets-api:latest
-
-            - name: Push Docker image
-              run: docker push ${{ secrets.DHUB_USERNAME }}/tickets-api:latest
-
-            - name: Upload to S3
+            - name: Terraform Apply
               run: |
-                mkdir deployment
-                rsync -Rr . deployment
-                zip -r deployment.zip deployment
-                aws s3 cp deployment.zip s3://${{ secrets.S3_BUCKET }}/
+                cd ./infra
+                cd ./terraform-seller
+                terraform init
+                terraform plan
+                terraform apply -auto-approve
+                
+
+          #  - name: Docker Hub 
+           #   uses: docker/login-action@v2
+            #  with:
+             #   username: ${{ secrets.DHUB_USERNAME }}
+              #  password: ${{ secrets.DHUB_PASSWORD }}
+
+           # - name: Build Docker image
+            #  run: docker build . -t ${{ secrets.DHUB_USERNAME }}/tickets-api:latest
+
+            # - name: Push Docker image
+             # run: docker push ${{ secrets.DHUB_USERNAME }}/tickets-api:latest
+
+            
 
             - name: Create deployment
               run: |
