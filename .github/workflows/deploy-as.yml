@@ -2,51 +2,67 @@ name: deploy-aws
 on: [push]
 
 jobs:
-    deploy:
-        name: Deploy to AWS
-        runs-on: ubuntu-latest
-        steps:
+  deploy:
+    name: Deploy to AWS
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
 
-            - name: Checkout
-              uses: actions/checkout@v2
-              
-            - name: Configure AWS credentials
-              uses: aws-actions/configure-aws-credentials@v1
-              with:
-                  aws-access-key-id: "ASIAZQ3DR3Z3FS2JD6WG"
-                  aws-secret-access-key: "FGUlEl+Nn44WojBq5vEFavDaESqivbbz3PM0VhbH"
-                  aws-session-token: "IQoJb3JpZ2luX2VjEG8aCXVzLXdlc3QtMiJHMEUCIQDE46faRuCynvR2Ys2/DPekNg89li/FxeSI9KxRR2oKNAIgTBqMkYCbYOWMuYO7kw2iBybAibV/63S8I1CWusb1OkQqswIIOBAAGgw2NTQ2NTQ0MzA4MzgiDOJDjtJuXJKL9SKO8SqQAry8CG+nPzPlrzfP3w1DK/jChkYeBRiPtIXYAFuhANYngG2MLjD2ol4RXHUCtWivF/obb/WmcGf2Qtt5w6nOFbSaLThF/2NQicEWqsMLAb8JY7KiOBXd81+P7QlmyjHMS5lUOkePER4IB1g8Kroyk18UFDwl40pThvaOEzRiscW5ne/tj0jrs/2GS1XMwk7MVWYOQNOJtCFvyWqPPD9Z81yJ4uDoYCiCve2RHdyc0C+n6Ipytlq1T1M+Z4K8joKE1Yaep84D3u2foYePcZxnhDLCioTZoIfZM2ND+GkgFNZvZVLFkBsz5NeUyTgemHsQutVnWsPsiCrRtzF7Rw21TtiIkLEp/p99pFqptCVnrjvKMJ75trQGOp0B5Hxukjhow6cPRua0lM1rKMt29oDVenN8nCBUjMipyXTS0EpgbEXj3tQjiucyniiXUDI3dfr7kSMuWOXyUcAXFXB1nmpfcJkgdkazpVpICv5cvVsiY9Iac56MbxfnGemXAdko+nOrrCMm216LCKyQKHGg70hQH1lBZkqL24JiKJ4ji3bJ5JsUvX2jydftTxNZ8W7/BbH0Pu9URpbMqQ=="
-                  aws-region: us-east-1
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: us-east-1
 
-            - name: Setup Terraform
-              uses: hashicorp/setup-terraform@v2
-              with:
-                terraform_wrapper: false
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_wrapper: false
 
-            - name: Terraform Apply
-              run: |
-                cd ./infra
-                cd ./terraform-seller
-                terraform init
-                terraform plan
-                terraform apply -auto-approve
-                
+      - name: Terraform Apply
+        run: |
+          cd ./infra/terraform-seller
+          terraform init
+          terraform plan
+          terraform apply -auto-approve
 
-            - name: Docker Hub 
-              uses: docker/login-action@v2
-              with:
-                username: ${{ secrets.DHUB_USERNAME }}
-                password: ${{ secrets.DHUB_PASSWORD }}
+      - name: Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DHUB_USERNAME }}
+          password: ${{ secrets.DHUB_PASSWORD }}
 
-            - name: Build Docker image
-              run: docker build . -t ${{ secrets.DHUB_USERNAME }}/seller-api:latest
+      - name: Build Docker image
+        run: docker build . -t ${{ secrets.DHUB_USERNAME }}/seller-api:latest
 
-            - name: Push Docker image
-              run: docker push ${{ secrets.DHUB_USERNAME }}/seller-api:latest
+      - name: Push Docker image
+        run: docker push ${{ secrets.DHUB_USERNAME }}/seller-api:latest
 
-           # - name: Create deployment
-            #  run: |
-             #   aws deploy create-deployment --application-name SellerInstance \
-              #      --deployment-config-name CodeDeployDefault.OneAtATime \
-               #     --deployment-group-name seller-group-pp \
-                #    --s3-location bucket=${{ secrets.S3_BUCKET }},bundleType=zip,key=deployment.zip
+      - name: Get EC2 IP Address
+        id: ec2
+        run: |
+          INSTANCE_IP=$(aws ec2 describe-instances \
+            --filters "Name=tag:Name,Values=SellerInstance" \
+            --query "Reservations[*].Instances[*].PrivateIpAddress" \
+            --output text)
+          echo "::set-output name=instance_ip::$INSTANCE_IP"
+
+      - name: Create SSH Key File
+        run: |
+          echo "${{ secrets.PRIVATE_KEY }}" > private_key.pem
+          chmod 600 private_key.pem
+
+      - name: Install Docker on EC2 and Run Container
+        run: |
+          ssh -o StrictHostKeyChecking=no -i private_key.pem ec2-user@${{ steps.ec2.outputs.instance_ip }} << 'EOF'
+            sudo yum update -y
+            sudo amazon-linux-extras install docker -y
+            sudo service docker start
+            sudo usermod -a -G docker ec2-user
+            docker login -u ${{ secrets.DHUB_USERNAME }} -p ${{ secrets.DHUB_PASSWORD }}
+            docker pull ${{ secrets.DHUB_USERNAME }}/seller-api:latest
+            docker run -d --name seller-api -p 80:80 ${{ secrets.DHUB_USERNAME }}/seller-api:latest
+          EOF
