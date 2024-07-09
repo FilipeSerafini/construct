@@ -1,0 +1,6 @@
+version: "2"
+services:
+  app:
+    image: "${DHUB_USERNAME}/seller-api:latest"
+    ports:
+      - "8080:8080"
