@@ -13,9 +13,9 @@ jobs:
             - name: Configure AWS credentials
               uses: aws-actions/configure-aws-credentials@v1
               with:
-                  aws-access-key-id: ${{ secrets.ACCESS_KEY_ID }}
-                  aws-secret-access-key: ${{ secrets.SECRET_ACCESS_KEY }}
-                  aws-session-token: ${{ secrets.SESSION_TOKEN }}
+                  aws-access-key-id: "ASIAZQ3DR3Z3P6BVOOUX"
+                  aws-secret-access-key: "TA+jGA0myV494iW5/JHL+Av7qZLFxID8+bVoOG74"
+                  aws-session-token: "IQoJb3JpZ2luX2VjEG4aCXVzLXdlc3QtMiJHMEUCIHRF82twDzRwnkItqyKwXrl9JdWcqretLWPwtTrj+SK2AiEAulEgYsRXH7XS01zxbCbA4Di7SWvxF4dU1yDsxisCcjUqswIINxAAGgw2NTQ2NTQ0MzA4MzgiDIzk6t8XsNHrJoKSiCqQAiuAcV/Djeq5zm1CjaFojTFcDRMuOxw/nm5fPl6sJeMH+okiTAYZlx99xHExW41ySUYf4hSX5iCyzFA7fqlXW7JwL9im4qLVVykgKgPD6pDWLKUHsiuHRzlbHHR+FP6AtnzLO5lg6oCsHvv0XwJyck3bnIdIAqUiEG2Q7F0VRYM6xbv+yCOyEhlFpg15idnxbNurAZ/9eVctlpq4cC+214YBIjJzMcjaLryHXtWZ5mYM5vBluBLJGJerlkc8iZ4bVHTVmR/WbompCPnOjo3oZgFtGqr16AF5qRUQxgEQgB4qag6QLd4WKHizM3Do0jrlI3yDsTGyNZ3jgfxz2OKpAS0wOfe86UO3BoCN5eCWxN4KMLbetrQGOp0BDqVjlyA0TNFs7pvWjGMt6yZwyQQFEktymixQJTUmiJluDUrvYAry4kdLEqnOXRkOSmN1922vKH3LrOePY6zAbC6qHxyIM5YNCpmzA+15e7tRGxvT2SUFevI0qY9KJWIOhvjzqnELtKfPMS0QEq8aCqoH5DgA1vPl+Y7XxB1XSCUX6LoM33rFpFjcJEXhWWsZTD2/33OT5+m/HvSfpA=="
                   aws-region: us-east-1
 
             - name: Setup Terraform
