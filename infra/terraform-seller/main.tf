@@ -70,12 +70,3 @@ resource "aws_instance" "seller_instance" {
     Name = "SellerInstance"
   }
 }
-
-# Criação de um bucket S3
-resource "aws_s3_bucket" "seller_bucket" {
-  bucket = "seller-bucket-exemplo-terraform"
-
-  tags = {
-    Name = "SellerBucket"
-  }
-}
