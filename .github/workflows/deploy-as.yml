@@ -32,22 +32,22 @@ jobs:
                 terraform apply -auto-approve
                 
 
-          #  - name: Docker Hub 
-           #   uses: docker/login-action@v2
-            #  with:
-             #   username: ${{ secrets.DHUB_USERNAME }}
-              #  password: ${{ secrets.DHUB_PASSWORD }}
+            - name: Docker Hub 
+              uses: docker/login-action@v2
+              with:
+                username: ${{ secrets.DHUB_USERNAME }}
+                password: ${{ secrets.DHUB_PASSWORD }}
 
-           # - name: Build Docker image
-            #  run: docker build . -t ${{ secrets.DHUB_USERNAME }}/tickets-api:latest
+            - name: Build Docker image
+              run: docker build . -t ${{ secrets.DHUB_USERNAME }}/seller-api:latest
 
-            # - name: Push Docker image
-             # run: docker push ${{ secrets.DHUB_USERNAME }}/tickets-api:latest
+            - name: Push Docker image
+              run: docker push ${{ secrets.DHUB_USERNAME }}/seller-api:latest
             
 
-          #  - name: Create deployment
-           #   run: |
-            #    aws deploy create-deployment --application-name SellerInstance \
-             #       --deployment-config-name CodeDeployDefault.OneAtATime \
-              #      --deployment-group-name seller-group-pp \
-               #     --s3-location bucket=${{ secrets.S3_BUCKET }},bundleType=zip,key=deployment.zip
+           # - name: Create deployment
+            #  run: |
+             #   aws deploy create-deployment --application-name SellerInstance \
+              #      --deployment-config-name CodeDeployDefault.OneAtATime \
+               #     --deployment-group-name seller-group-pp \
+                #    --s3-location bucket=${{ secrets.S3_BUCKET }},bundleType=zip,key=deployment.zip
